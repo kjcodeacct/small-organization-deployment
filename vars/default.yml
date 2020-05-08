@@ -1,0 +1,28 @@
+---
+create_containers: 4
+default_container_name: docker
+default_container_image: ubuntu
+default_container_command: sleep 1d
+
+smtp_server: smtp.example.com
+
+# discourse specific vars
+# you can specify multiple admin emails via comma delimeter admin1@example.com,admin2@example.com
+discourse_sub_domain: members
+discourse_admin_email: admin@example.com
+discourse_port: 8087
+
+# mailcow specific vars
+fqdn_sub_domain: postoffice
+mailcow_port: 8086
+
+# grav specific vars
+grav_sub_domain: site
+grav_port: 8085
+
+# static site specific vars
+static_site_port: 8088
+
+
+# admin user ssh key for passwordless access
+ssh_pub_key: KEY_GOES_HERE

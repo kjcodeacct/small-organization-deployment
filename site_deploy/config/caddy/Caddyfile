@@ -1,0 +1,54 @@
+https://{{hosturl}} {
+    proxy / localhost:{{static_site_port}} {
+        websocket
+        gzip
+        transparent
+        log /srv/site_deploy/log/static/http.log {
+            # keep up to 2 50mb log files
+            rotate_size 50
+            rotate_keep 2
+        }
+    }
+}
+
+# grav container
+https://{{grav_sub_domain}}.{{hosturl}} {
+    proxy / localhost:{{grav_port}} {
+        websocket
+        gzip
+        transparent
+        log /srv/site_deploy/log/grav/http.log {
+            # keep up to 2 50mb log files
+            rotate_size 50
+            rotate_keep 2
+        }
+    }
+}
+
+# mailcow container
+https://{{fqdn_sub_domain}}.{{hosturl}} {
+    proxy / localhost:{{mailcow_port}} {
+        websocket
+        gzip
+        transparent
+        log /srv/site_deploy/log/mailcow/http.log {
+            # keep up to 2 50mb log files
+            rotate_size 50
+            rotate_keep 2
+        }
+    }
+}
+
+# discourse container
+https://{{discourse_sub_domain}}.{{hosturl}} {
+    proxy / localhost:{{discourse_port}} {
+        websocket
+        gzip
+        transparent
+        log /srv/site_deploy/log/discourse/http.log {
+            # keep up to 2 50mb log files
+            rotate_size 50
+            rotate_keep 2
+        }
+    }
+}

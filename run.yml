@@ -1,0 +1,53 @@
+#################################################
+# Organization Web Server Run/Go Live Playbook
+#################################################
+---
+- hosts: all
+  become: true
+  vars_prompt:
+    - name: admin_name
+      prompt: "What is the admins username?"
+      private: no
+
+  tasks:
+    # run static site container
+    - name: Run static site container - nginx
+      shell: docker run -d -p {{ static_site_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
+      become: true
+      become_user: "{{ admin_name }}"
+      args:
+        chdir: /srv/site_deploy/containers/grav
+
+    # run grav
+    - name: Run grav container
+      shell: docker run -d -p {{ grav_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
+      become: true
+      become_user: "{{ admin_name }}"
+      args:
+        chdir: /srv/site_deploy/containers/grav
+
+    # run mailcow
+    - name: Build mailcow container
+      shell: docker-compose pull
+      become: true
+      become_user: "{{ admin_name }}"
+      args:
+        chdir: /srv/site_deploy/containers/mailcow-dockerized
+
+    - name: Run mailcow container detatched
+      shell: docker-compose up -d
+      become: true
+      become_user: "{{ admin_name }}"
+      args:
+        chdir: /srv/site_deploy/containers/mailcow-dockerized
+
+    # run discourse
+    - name: Run discourse container 
+      shell: ./launcher rebuild app
+      become: true
+      become_user: "{{ admin_name }}"
+      args:
+        chdir: /srv/site_deploy/containers/discourse_docker
+
+    - debug:
+      msg: All containers are now live
