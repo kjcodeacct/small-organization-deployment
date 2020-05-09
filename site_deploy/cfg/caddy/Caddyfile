@@ -1,5 +1,5 @@
-https://{{hosturl}} {
-    proxy / localhost:{{static_site_port}} {
+https://_hosturl_ {
+    proxy / localhost:_static_site_port_ {
         websocket
         gzip
         transparent
@@ -12,8 +12,8 @@ https://{{hosturl}} {
 }
 
 # grav container
-https://{{grav_sub_domain}}.{{hosturl}} {
-    proxy / localhost:{{grav_port}} {
+https://_grav_sub_domain_._hosturl_ {
+    proxy / localhost:_grav_port_ {
         websocket
         gzip
         transparent
@@ -26,8 +26,8 @@ https://{{grav_sub_domain}}.{{hosturl}} {
 }
 
 # mailcow container
-https://{{fqdn_sub_domain}}.{{hosturl}} {
-    proxy / localhost:{{mailcow_port}} {
+https://_fqdn_sub_domain_._hosturl_ {
+    proxy / localhost:_mailcow_port_ {
         websocket
         gzip
         transparent
@@ -40,8 +40,8 @@ https://{{fqdn_sub_domain}}.{{hosturl}} {
 }
 
 # discourse container
-https://{{discourse_sub_domain}}.{{hosturl}} {
-    proxy / localhost:{{discourse_port}} {
+https://_discourse_sub_domain_._hosturl_ {
+    proxy / localhost:_discourse_port_ {
         websocket
         gzip
         transparent

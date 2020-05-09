@@ -49,5 +49,13 @@
       args:
         chdir: /srv/site_deploy/containers/discourse_docker
 
+    # Start caddy as a service
+    - name: start caddy
+      service:
+          name: caddy
+          state: started
+
     - debug:
-      msg: All containers are now live
+      msg: |
+        All services and containers are now live!
+        Please see POST_INSTALL.MD for following up on deployment.

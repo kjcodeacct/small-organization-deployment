@@ -2,8 +2,10 @@
 # Organization Web Server Deployment Playbook
 #################################################
 ---
-- hosts: all
+- hosts: localhost
+  connection: local
   become: true
+  become_user: root
   vars_files:
     - vars/default.yml
   vars_prompt:
@@ -29,30 +31,6 @@
 
     # system setup
 
-    - name: Install aptitude using apt
-      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
-
-    - name: Install required system packages
-      apt: name={{ item }} state=latest update_cache=yes
-      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
-
-    - name: Add Docker GPG apt Key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker Repository
-      apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu bionic stable
-        state: present
-
-    - name: Update apt and install docker-ce
-      apt: update_cache=yes name=docker-ce state=latest
-
-    - name: Install Docker Module for Python
-      pip:
-        name: docker
-
     # uncomment the code below if you have any pre built docker images you want to pull in
 
     # - name: Pull default Docker image
@@ -72,9 +50,8 @@
     - name: Create a 'admin' user
       user:
         name: "{{ admin_name }}"
-        password: "{{ admin_password }}"
+        password: "{{ admin_password | password_hash('sha512') }}"
         groups:
-          - docker
           - sudo
         state: present
         shell: /bin/bash
@@ -82,11 +59,11 @@
         createhome: yes
         home: "/home/{{ admin_name }}"
 
-    - name: Set authorized ssh key taken for {{ admin_name }}
-      authorized_key:
-        user: "{{ admin_name }}"
-        state: present
-        key: "{{ ssh_pub_key }}"
+    # - name: Set authorized ssh key taken for {{ admin_name }}
+    #   authorized_key:
+    #     user: "{{ admin_name }}"
+    #     state: present
+    #     key: "{{ ssh_pub_key }}"
 
     # Install dev tools
     - name: Install git
@@ -95,13 +72,19 @@
     # Setup git config for 'admin_name' user
     - name: Set git username
       command: git config --global user.name "{{ admin_name }}"
-      become: true
-      become_user: "{{ admin_name }}"
 
-    - name: Set git email
-      command: git config --global.email "{{ admin_name }}@{{ host_url }}"
-      become: true
-      become_user: "{{ admin_name }}"
+    - git_config:
+        name: user.email
+        scope: global
+        value: "{{ admin_name }}@{{ host_url }}"
+
+    # Install Docker
+    - name: Install docker
+      apt: name=docker state=latest
+
+    # Install dev tools
+    - name: Install docker-compose
+      apt: name=docker-compose state=latest
 
     # Copy setup instance
     # - git:
@@ -116,49 +99,61 @@
     - name: Set discourse config port
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_port}}'
+        regexp: '_discourse_port_'
         replace: '{{ discourse_port }}'
         backup: true
 
     - name: Set discourse config hostname
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_hostname}}'
+        regexp: '_discourse_hostname_'
         replace: '{{ discourse_sub_domain }}.{{ host_url }}'
 
     - name: Set discourse config admin email list
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_admin_email}}'
+        regexp: '_discourse_admin_email_'
         replace: '{{ discourse_admin_email }}'
     
     - name: Set discourse config smtp server
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_smtp_address}}'
+        regexp: '_discourse_smtp_address_'
         replace: '{{ smtp_server }}'
 
     - name: Set discourse config smtp user
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_smtp_user}}}'
+        regexp: '_discourse_smtp_user_'
         replace: '{{ smtp_user }}'
 
     - name: Set discourse config smtp password
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
-        regexp: '{{discourse_smtp_password}}}'
+        regexp: '_discourse_smtp_password_'
         replace: '{{ smtp_pass }}'
 
-    # mailcow
-    - name: Run mailcow setup script
-      expect:
-        command: /srv/site_deploy/containers/mailcow-dockerized
-        responses:
-          'Mail server hostname (FQDN) - this is not your mail domain, but your mail servers hostname:' : '{{ fqdn_sub_domain }}.{{ host_url }}'
-          'Timezone [UTC]:' : ''
-          "Do you want to disable ClamAV now? [Y/n]" : "y"
-          
+    - name: Set mailcow fqdn
+      replace:
+        path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
+        regexp: '_fqdn_mailcow_url_'
+        replace: '{{ fqdn_sub_domain }}.{{ host_url }}'
+        backup: true
+
+    - name: Set mailcow db password
+      replace:
+        path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
+        regexp: '_mailcow_db_pass_'
+        replace: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters') }}"
+        backup: true
+
+    - name: Set mailcow db root password
+      replace:
+        path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
+        regexp: '_mailcow_db_root_'
+        replace: "{{ lookup('password', '/dev/null length=25 chars=ascii_letters') }}"
+        backup: true
+   
     - name: Set mailcow http port
       replace:
         path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
@@ -181,34 +176,28 @@
     # caddy
     - name: Set caddyfile host url
       replace:
-        path: /srv/site_deploy/config/caddy/Caddyfile
-        regexp: '{{host_url}}'
+        path: /srv/site_deploy/cfg/caddy/Caddyfile
+        regexp: '_host_url_'
         replace: '{{ host_url }}'
         backup: true
 
     - name: Set caddyfile grav subdomain
       replace:
-        path: /srv/site_deploy/config/caddy/Caddyfile
-        regexp: '{{grav_sub_domain}}'
+        path: /srv/site_deploy/cfg/caddy/Caddyfile
+        regexp: '_grav_sub_domain_'
         replace: '{{ grav_sub_domain }}'
 
     - name: Set caddyfile mailcow subdomain
       replace:
-        path: /srv/site_deploy/config/caddy/Caddyfile
-        regexp: '{{fqdn_sub_domain}}'
+        path: /srv/site_deploy/cfg/caddy/Caddyfile
+        regexp: '_fqdn_sub_domain_'
         replace: '{{ fqdn_sub_domain }}'
 
-    - name: Set caddyfile mailcow
+    - name: Set caddyfile discourse subdomain
       replace:
-        path: /srv/site_deploy/config/caddy/Caddyfile
-        regexp: '{{discourse_sub_domain}}'
+        path: /srv/site_deploy/cfg/caddy/Caddyfile
+        regexp: '_discourse_sub_domain_'
         replace: '{{ discourse_sub_domain }}'
-
-    # Start services
-    - name: start caddy
-      service:
-          name: caddy
-          state: started
 
     - debug:
         msg: Deployment has completed
