@@ -3,7 +3,10 @@
 #################################################
 ---
 - hosts: all
+  connection: local
   become: true
+  vars_files:
+    - vars/default.yml
   vars_prompt:
     - name: admin_name
       prompt: "What is the admins username?"
@@ -11,18 +14,18 @@
 
   tasks:
     # run static site container
-    - name: Run static site container - nginx
-      shell: docker run -d -p {{ static_site_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
-      become: true
-      become_user: "{{ admin_name }}"
-      args:
-        chdir: /srv/site_deploy/containers/grav
+    # - name: Run static site container - nginx
+    #   shell: docker run -d --restart always --name static.site -p {{ static_site_port }}:80  nginx
+    #   become: true
+    #   become_user: root
+    #   args:
+    #     chdir: /srv/site_deploy/containers/static
 
     # run grav
     - name: Run grav container
       shell: docker run -d -p {{ grav_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
       become: true
-      become_user: "{{ admin_name }}"
+      become_user: root
       args:
         chdir: /srv/site_deploy/containers/grav
 
@@ -30,14 +33,14 @@
     - name: Build mailcow container
       shell: docker-compose pull
       become: true
-      become_user: "{{ admin_name }}"
+      become_user: root
       args:
         chdir: /srv/site_deploy/containers/mailcow-dockerized
 
     - name: Run mailcow container detatched
       shell: docker-compose up -d
       become: true
-      become_user: "{{ admin_name }}"
+      become_user: root
       args:
         chdir: /srv/site_deploy/containers/mailcow-dockerized
 
@@ -45,17 +48,23 @@
     - name: Run discourse container 
       shell: ./launcher rebuild app
       become: true
-      become_user: "{{ admin_name }}"
+      become_user: root
       args:
         chdir: /srv/site_deploy/containers/discourse_docker
 
+
     # Start caddy as a service
-    - name: start caddy
+    - name: Enable caddy service
+      service:
+        name: caddy
+        enabled: yes
+
+    - name: Start caddy service
       service:
           name: caddy
           state: started
 
-    - debug:
-      msg: |
-        All services and containers are now live!
-        Please see POST_INSTALL.MD for following up on deployment.
+    # - debug:
+    #   msg: |
+    #     All services and containers are now live!
+    #     Please see POST_INSTALL.MD for following up on deployment.

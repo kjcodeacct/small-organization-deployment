@@ -95,6 +95,14 @@
 
     # container setup
 
+    # grav
+    - name: Build grav container image
+      shell: docker build -t grav:latest .
+      become: true
+      become_user: root
+      args:
+        chdir: /srv/site_deploy/containers/grav
+
     # discourse
     - name: Set discourse config port
       replace:
@@ -198,6 +206,15 @@
         path: /srv/site_deploy/cfg/caddy/Caddyfile
         regexp: '_discourse_sub_domain_'
         replace: '{{ discourse_sub_domain }}'
+
+    - name: Copy caddy systemd service
+      copy:
+        src: /srv/site_deploy/bin/caddy/caddy.service
+        dest: /etc/systemd/system
+        remote_src: yes
+
+    - name: reload systemd unit configuration
+      command: systemctl daemon-reload
 
     - debug:
         msg: Deployment has completed
