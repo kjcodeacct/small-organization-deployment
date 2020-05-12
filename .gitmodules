@@ -1,0 +1,6 @@
+[submodule "site_deploy/containers/discourse_docker"]
+	path = site_deploy/containers/discourse_docker
+	url = https://github.com/kjcodeacct/discourse_docker
+[submodule "site_deploy/containers/mailcow-dockerized"]
+	path = site_deploy/containers/mailcow-dockerized
+	url = https://github.com/kjcodeacct/mailcow-dockerized

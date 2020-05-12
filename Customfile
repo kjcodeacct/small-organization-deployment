@@ -1,0 +1,5 @@
+# Limit ram to 2gb to behave approximately how a minimal hosted vm would
+config.vm.provider :virtualbox do |v|
+  v.customize ["modifyvm", :id, "--memory", 2048]
+  v.name = "ubu_server_test_2020"
+end
