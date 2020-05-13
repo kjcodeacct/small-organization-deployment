@@ -29,6 +29,12 @@
 
   tasks:
 
+    - name: Copy site deploy to server
+      synchronize:
+        mode: push
+        src: ./site_deploy/
+        dest: /srv/
+
     # system setup
 
     # uncomment the code below if you have any pre built docker images you want to pull in
@@ -86,13 +92,6 @@
     - name: Install docker-compose
       apt: name=docker-compose state=latest
 
-    # Copy setup instance
-    # - git:
-    #   repo: 'https://foosball.example.org/path/to/repo.git'
-    #   dest: /srv/site_deploy
-    #   version: release-0.22
-
-
     # container setup
 
     # grav
@@ -104,6 +103,12 @@
         chdir: /srv/site_deploy/containers/grav
 
     # discourse
+    - name: Copy discourse config
+      copy:
+        src: /srv/site_deploy/templates/discourse_docker/app.yml
+        dest: /srv/site_deploy/containers/discourse_docker/containers/app.yml
+        remote_src: yes
+
     - name: Set discourse config port
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
@@ -140,6 +145,13 @@
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
         regexp: '_discourse_smtp_password_'
         replace: '{{ smtp_pass }}'
+
+    # mailcow
+    - name: Copy mailcow.conf
+      copy:
+        src: /srv/site_deploy/templates/mailcow-dockerized/mailcow.conf
+        dest: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
+        remote_src: yes
 
     - name: Set mailcow fqdn
       replace:
@@ -182,6 +194,12 @@
         replace: '# HTTPS_BIND=0.0.0.0'
 
     # caddy
+    - name: Copy mailcow.conf
+      copy:
+        src: /srv/site_deploy/templates/caddy/Caddyfile
+        dest: /srv/site_deploy/cfg/caddy/Caddyfile
+        remote_src: yes
+
     - name: Set caddyfile host url
       replace:
         path: /srv/site_deploy/cfg/caddy/Caddyfile
