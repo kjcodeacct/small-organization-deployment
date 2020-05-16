@@ -1,5 +1,5 @@
 ---
-- hosts: localhost
+- hosts: all
   connection: local
   become: true
   become_user: root
@@ -24,7 +24,7 @@
     - name: Allow access to smtps port 465
       ufw:
         rule: allow
-        port: '465'
+        port: '587'
         proto: tcp
     
     - name: Set authorized ssh key taken for {{ admin_name }}

@@ -2,7 +2,7 @@
 # Organization Web Server Deployment Playbook
 #################################################
 ---
-- hosts: localhost
+- hosts: all
   connection: local
   become: true
   become_user: root

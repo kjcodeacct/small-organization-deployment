@@ -43,6 +43,17 @@ Currently there are 2 logs rotated of 50mb size per container
 ## HTTPS
 All TLS/HTTP is handled automatically with caddy and lets encrypt
 
+## Security
+
+* Fail2ban is installed by default
+* Please copy any ssh key you want to /vars/default.yml under the ssh_pub_key variable
+* Root SSH is disabled once secure.yml is ran
+
+### Ports
+* port 587 is open for for SMTP
+* port 143 is open for IMAP
+
+## Ansible Playbooks
 
 ### Vagrant Testing
 Modify the 'deploy.yml' with the following to point to the local host
