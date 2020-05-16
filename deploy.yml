@@ -33,7 +33,7 @@
       synchronize:
         mode: push
         src: ./site_deploy/
-        dest: /srv/
+        dest: /srv/site_deploy
 
     # system setup
 
@@ -65,12 +65,6 @@
         createhome: yes
         home: "/home/{{ admin_name }}"
 
-    # - name: Set authorized ssh key taken for {{ admin_name }}
-    #   authorized_key:
-    #     user: "{{ admin_name }}"
-    #     state: present
-    #     key: "{{ ssh_pub_key }}"
-
     # Install dev tools
     - name: Install git
       apt: name=git state=latest
@@ -93,6 +87,14 @@
       apt: name=docker-compose state=latest
 
     # container setup
+
+    # nginx / static site
+    - name: Build nginx static site
+      shell: docker build -t static.site .
+      become: true
+      become_user: root
+      args:
+        chdir: /srv/site_deploy/containers/static
 
     # grav
     - name: Build grav container image

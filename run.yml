@@ -7,23 +7,21 @@
   become: true
   vars_files:
     - vars/default.yml
-  vars_prompt:
-    - name: admin_name
-      prompt: "What is the admins username?"
-      private: no
 
   tasks:
     # run static site container
-    # - name: Run static site container - nginx
-    #   shell: docker run -d --restart always --name static.site -p {{ static_site_port }}:80  nginx
-    #   become: true
-    #   become_user: root
-    #   args:
-    #     chdir: /srv/site_deploy/containers/static
+    - name: Run static site container - nginx
+      # restart already running container if it exists, or create it
+      shell: docker restart static.site || docker run -d --restart always -p {{ static_site_port }}:80 static.site
+      become: true
+      become_user: root
+      args:
+        chdir: /srv/site_deploy/containers/static
 
     # run grav
     - name: Run grav container
-      shell: docker run -d -p {{ grav_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
+      # restart already running container if it exists, or create it
+      shell: docker restart grav:latest || docker run -d -p {{ grav_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
       become: true
       become_user: root
       args:
@@ -61,10 +59,10 @@
 
     - name: Start caddy service
       service:
-          name: caddy
-          state: started
+        name: caddy
+        state: started
 
-    # - debug:
-    #   msg: |
-    #     All services and containers are now live!
-    #     Please see POST_INSTALL.MD for following up on deployment.
+    - debug:
+        msg: |
+          All services and containers are now live!
+          Please see POST_INSTALL.MD for following up on deployment.

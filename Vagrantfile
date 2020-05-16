@@ -16,6 +16,16 @@ Vagrant.configure("2") do |config|
 
   config.vm.network "private_network", ip: "192.168.3.3"
 
+  # boostrap and ensure installing deps for testing
+  config.vm.provision :shell, path: "bootstrap.sh"
+
+  # Limit ram to 2gb, and 2 core cpu to behave approximately how a minimal hosted vm would
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--cpus", 2]
+    vb.customize ["modifyvm", :id, "--memory", 2048]
+    vb.name = "ubu_server_test_2020"
+  end
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.

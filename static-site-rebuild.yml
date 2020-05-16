@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  become_user: root
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    
+    # build nginx / static site
+    - name: Build nginx static site
+      shell: docker build -t static.site:latest .
+      become: true
+      become_user: root
+      args:
+        chdir: /srv/site_deploy/containers/static
+
+    # run static site container
+    - name: Run static site container - nginx
+      # restart already running container if it exists, or create it
+      shell: docker restart static.site:latest || docker run -d --restart always -p {{ static_site_port }}:80 static.site:latest
+      become: true
+      become_user: root
+      args:
+        chdir: /srv/site_deploy/containers/static

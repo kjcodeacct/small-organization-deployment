@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  become_user: root
+  vars_files:
+    - vars/default.yml
+  vars_prompt:
+    - name: admin_name
+      prompt: "What is the new admins username?"
+      private: no
+
+  tasks:
+      # security setup
+    - name: Install fail2ban
+      apt: name=fail2ban state=latest
+
+    - name: Allow access to imap port 143
+      ufw:
+        rule: allow
+        port: '143'
+        proto: tcp
+
+    - name: Allow access to smtps port 465
+      ufw:
+        rule: allow
+        port: '465'
+        proto: tcp
+    
+    - name: Set authorized ssh key taken for {{ admin_name }}
+      authorized_key:
+        user: "{{ admin_name }}"
+        state: present
+        key: "{{ ssh_pub_key }}"
+
+    - name: Disallow root SSH access
+      lineinfile: dest=/etc/ssh/sshd_config
+                  regexp="^PermitRootLogin"
+                  line="PermitRootLogin no"
+                  state=present
+      notify: Restart ssh
