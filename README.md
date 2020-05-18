@@ -1,6 +1,5 @@
 # Organiation Site Structure
 
-# NOTE 
 This playbook and guide assumes the end user (you) are running ubuntu both on your host, and server.
 With the latest ansible version
 
