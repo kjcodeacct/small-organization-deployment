@@ -63,7 +63,7 @@
 
     # Install Docker
     - name: Install docker
-      apt: name=docker state=latest
+      apt: name=docker.io state=latest
 
     # Install dev tools
     - name: Install docker-compose
