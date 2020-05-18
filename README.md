@@ -1,12 +1,59 @@
 # Organiation Site Structure
 
+# NOTE 
+This playbook and guide assumes the end user (you) are running ubuntu both on your host, and server.
+With the latest ansible version
+
 # Requirements
-* ansible  (on remote machine)
-* ubuntu 16.04 - 20.04
+* ansible  (on local machine)
+* sshpass  (on local machine)
+* ubuntu 16.04 - 20.04 (tested with 20.04)
 * atleast 1gb ram (if enough users, then more)
+* smtp relay service
+
+# Requirement Installation
+## Install Ansible
+```sh
+$ sudo apt install software-properties-common
+$ sudo apt-add-repository ppa:ansible/ansible
+$ sudo apt update
+$ sudo apt install ansible
+```
+
+## Install SSHPass
+```sh
+$ sudo apt install sshpass
+```
+
+# Pre Deployment
+Modify vars/default.yml
+* set smtp_server to existing smtp relay service
+    * recommend <https://mailjet.com> - free up to 200 emails per day
+* modify any variable changes needed to match domain
+
+Create and store credentials for your 'sudo' user (ie non root user)
+
+Modify DNS records as needed
+
+# Deployment
+install base of applications and services with the following
+```sh
+$ ansible-playbook deploy.yml -i hosts --ask-become-pass -u root --become --ask-pass
+```
+
+run applications and services as *NON* root user created in deploy.yml, this example is 'admin' user
+```sh
+$ ansible-playbook run.yml -i hosts --ask-become-pass -u admin --become --ask-pass
+```
+
+if any static site changes need to occur, copy static site to '/srv/site_deploy/containers/static/data'
+and run
+```sh
+$ ansible-playbook static-site-rebuild.yml -i hosts --ask-become-pass -u admin --become --ask-pass
+```
+
 
 # Site directory structure
-
 ```
 /srv
     /site_deploy
@@ -56,11 +103,7 @@ All TLS/HTTP is handled automatically with caddy and lets encrypt
 ## Ansible Playbooks
 
 ### Vagrant Testing
-Modify the 'deploy.yml' with the following to point to the local host
-```yaml
-- hosts: localhost
-  connection: local
-```
+
 There is an included Vagrant file for testing locally if you would like. To do so just run the following command in the repo base directory.
 ```sh
 $ vagrant up
@@ -94,12 +137,17 @@ To view pushed snapshos
 $ vagrant snapshot list
 ```
 
-And to 'pop' those changes, run the following
+And to 'pop' those changes, run the following (and not delete the old snapshot)
 ```sh
-$ vagrant snapshot pop
+$ vagrant snapshot pop --no-delete
 ```
 
+Run the ansible playbooks below, specifying the vagrant user
+```sh
+$ ansible-playbook deploy.yml -i hosts --ask-become-pass -u vagrant --become --ask-pass
+$ ansible-playbook run.yml -i hosts --ask-become-pass -u vagrant --become --ask-pass
+```
 
 ## Issues and Features
-If there are any bugs with this, or the containers are in *severe* updates please put out a PR or create an issue.
+If there are any bugs with this, or the containers are in need of *severe* updates please put out a PR or create an issue.
 Like wise if there are any new containers/services worth adding please create a PR or issue.

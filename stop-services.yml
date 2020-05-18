@@ -1,0 +1,36 @@
+---
+- hosts: all
+  connection: local
+  become: true
+  become_user: root
+  vars_files:
+    - vars/default.yml
+  vars_prompt:
+    - name: confirm_and_warn
+      prompt: "Are you sure you want to stop all containers and services? (Press CTRL+C to cancel)"
+      private: no
+
+  tasks:
+    
+    # stop all containers
+    - name: Stop all containers
+      shell: docker stop $(docker ps -a -q)
+      become: true
+
+    # CAUTION #
+    # delete all containers - dont uncomment and run unless you're sure
+    # - name: Delete all containers
+    #   shell: docker rm $(docker ps -a -q)
+    #   become: true
+    # CAUTION #
+
+    - name: Stop caddy service
+      become: true
+      service:
+        name: caddy
+        state: stopped
+
+    - debug:
+        msg: |
+          All services and containers are now stopped!
+          Please restart them by running run.yml

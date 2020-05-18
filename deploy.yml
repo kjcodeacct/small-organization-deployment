@@ -3,9 +3,7 @@
 #################################################
 ---
 - hosts: all
-  connection: local
-  become: true
-  become_user: root
+  become: yes
   vars_files:
     - vars/default.yml
   vars_prompt:
@@ -36,27 +34,12 @@
         dest: /srv/site_deploy
 
     # system setup
-
-    # uncomment the code below if you have any pre built docker images you want to pull in
-
-    # - name: Pull default Docker image
-    #   docker_image:
-    #     name: "{{ default_container_image }}"
-    #     source: pull
-
-    # # Creates the number of containers defined by the variable create_containers, using values from vars file
-    # - name: Create default containers
-    #   docker_container:
-    #     name: "{{ default_container_name }}{{ item }}"
-    #     image: "{{ default_container_image }}"
-    #     command: "{{ default_container_command }}"
-    #     state: present
-    #   with_sequence: count={{ create_containers }}
     
     - name: Create a 'admin' user
       user:
         name: "{{ admin_name }}"
         password: "{{ admin_password | password_hash('sha512') }}"
+
         groups:
           - sudo
         state: present
@@ -91,16 +74,12 @@
     # nginx / static site
     - name: Build nginx static site
       shell: docker build -t static.site .
-      become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/static
 
     # grav
     - name: Build grav container image
       shell: docker build -t grav:latest .
-      become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/grav
 
@@ -195,14 +174,22 @@
         regexp: 'HTTPS_BIND=0.0.0.0'
         replace: '# HTTPS_BIND=0.0.0.0'
 
+    - name: Build mailcow container
+      shell: docker-compose pull
+      become: true
+      args:
+        chdir: /srv/site_deploy/containers/mailcow-dockerized
+
     # caddy
     - name: Copy mailcow.conf
+
       copy:
         src: /srv/site_deploy/templates/caddy/Caddyfile
         dest: /srv/site_deploy/cfg/caddy/Caddyfile
         remote_src: yes
 
     - name: Set caddyfile host url
+
       replace:
         path: /srv/site_deploy/cfg/caddy/Caddyfile
         regexp: '_host_url_'
@@ -210,30 +197,35 @@
         backup: true
 
     - name: Set caddyfile grav subdomain
+
       replace:
         path: /srv/site_deploy/cfg/caddy/Caddyfile
         regexp: '_grav_sub_domain_'
         replace: '{{ grav_sub_domain }}'
 
     - name: Set caddyfile mailcow subdomain
+
       replace:
         path: /srv/site_deploy/cfg/caddy/Caddyfile
         regexp: '_fqdn_sub_domain_'
         replace: '{{ fqdn_sub_domain }}'
 
     - name: Set caddyfile discourse subdomain
+
       replace:
         path: /srv/site_deploy/cfg/caddy/Caddyfile
         regexp: '_discourse_sub_domain_'
         replace: '{{ discourse_sub_domain }}'
 
     - name: Copy caddy systemd service
+
       copy:
         src: /srv/site_deploy/bin/caddy/caddy.service
         dest: /etc/systemd/system
         remote_src: yes
 
     - name: reload systemd unit configuration
+
       command: systemctl daemon-reload
 
     - debug:

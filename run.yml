@@ -3,8 +3,7 @@
 #################################################
 ---
 - hosts: all
-  connection: local
-  become: true
+  become: yes
   vars_files:
     - vars/default.yml
 
@@ -14,7 +13,6 @@
       # restart already running container if it exists, or create it
       shell: docker restart static.site || docker run -d --restart always -p {{ static_site_port }}:80 static.site
       become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/static
 
@@ -23,22 +21,14 @@
       # restart already running container if it exists, or create it
       shell: docker restart grav:latest || docker run -d -p {{ grav_port }}:80 --restart always -v grav_data:/srv/site_deploy/containers/data grav:latest
       become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/grav
 
     # run mailcow
-    - name: Build mailcow container
-      shell: docker-compose pull
-      become: true
-      become_user: root
-      args:
-        chdir: /srv/site_deploy/containers/mailcow-dockerized
 
     - name: Run mailcow container detatched
       shell: docker-compose up -d
       become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/mailcow-dockerized
 
@@ -46,18 +36,18 @@
     - name: Run discourse container 
       shell: ./launcher rebuild app
       become: true
-      become_user: root
       args:
         chdir: /srv/site_deploy/containers/discourse_docker
 
-
     # Start caddy as a service
     - name: Enable caddy service
+      become: true
       service:
         name: caddy
         enabled: yes
 
     - name: Start caddy service
+      become: true
       service:
         name: caddy
         state: started
@@ -65,4 +55,4 @@
     - debug:
         msg: |
           All services and containers are now live!
-          Please see POST_INSTALL.MD for following up on deployment.
+          Please go to subdomains for service configuration.

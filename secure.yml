@@ -33,9 +33,9 @@
         state: present
         key: "{{ ssh_pub_key }}"
 
-    - name: Disallow root SSH access
-      lineinfile: dest=/etc/ssh/sshd_config
-                  regexp="^PermitRootLogin"
-                  line="PermitRootLogin no"
-                  state=present
-      notify: Restart ssh
+    # - name: Disallow root SSH access
+    #   lineinfile: dest=/etc/ssh/sshd_config
+    #               regexp="^PermitRootLogin"
+    #               line="PermitRootLogin no"
+    #               state=present
+    #   notify: Restart ssh
