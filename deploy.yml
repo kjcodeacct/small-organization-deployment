@@ -94,7 +94,7 @@
       replace:
         path: /srv/site_deploy/containers/discourse_docker/containers/app.yml
         regexp: '_discourse_port_'
-        replace: '{{ discourse_port }}'
+        replace: "{{ discourse_port }}"
         backup: true
 
     - name: Set discourse config hostname
