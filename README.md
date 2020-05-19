@@ -11,6 +11,12 @@ With the latest ansible version
 * smtp relay service
 
 # Requirement Installation
+## Download Services/Containers
+Pull repo submodules containing discourse and mailcow
+```sh
+$ git submodule update --init --recursive
+```
+
 ## Install Ansible
 ```sh
 $ sudo apt install software-properties-common
