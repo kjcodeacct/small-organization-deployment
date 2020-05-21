@@ -162,18 +162,6 @@
         replace: 'HTTP_PORT=8086'
         backup: true
 
-    - name: Disable mailcow unnecessary https port
-      replace:
-        path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
-        regexp: 'HTTPS_PORT=443'
-        replace: '# HTTPS_PORT=443'
-    
-    - name: Disable mailcow unnecessary https port binding
-      replace:
-        path: /srv/site_deploy/containers/mailcow-dockerized/mailcow.conf
-        regexp: 'HTTPS_BIND=0.0.0.0'
-        replace: '# HTTPS_BIND=0.0.0.0'
-
     - name: Build mailcow container
       shell: docker-compose pull
       become: true
